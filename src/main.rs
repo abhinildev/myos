@@ -29,7 +29,7 @@ pub fn test_runner(tests: &[&dyn Testable]){
 #[panic_handler]
 fn panic(info: &PanicInfo)-> ! {
     println!("{}", info);
-    loop {}
+    myos::hlt_loop();
 }
 #[cfg(test)]
 #[panic_handler]
@@ -43,15 +43,19 @@ pub extern "C" fn _start()-> !{
 //    vga_buffer::WRITER.lock().write_str("Hello again").unwrap();
 //    write!(vga_buffer::WRITER.lock(),", some numbers: {} {}",42,1.337).unwrap();
     myos::init();
-    x86_64::instructions::interrupts::int3();
-
+    // unsafe {
+    //     *(0xdeadbeef as *mut u8)=42;
+    // };
+    //x86_64::instructions::interrupts::int3();
+    
+    //stack_overflow();
    println!("Hello World{}","!");
    //panic!("Some panic message");
    #[cfg(test)]
    test_main();
 
    println!("It did not crash");
-   loop{}
+   myos::hlt_loop();
 }
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
 #[repr(u32)]

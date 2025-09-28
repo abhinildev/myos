@@ -4,6 +4,7 @@
 #![test_runner(crate::test_runner)]
 #![feature(abi_x86_interrupt)]
 #![reexport_test_harness_main = "test_main"]
+pub mod gdt;
 pub mod serial;
 mod interrupts;
 pub mod vga_buffer;
@@ -48,16 +49,14 @@ pub fn test_panic_handler(info: &PanicInfo)-> !{
     serial_print!("[failed]\n");
     serial_println!("Error: {}\n",info);
     exit_qemu(QemuExitCode::Failed);
-    loop {
-        
-    }
+    hlt_loop();
 }
 #[cfg(test)]
 #[unsafe(no_mangle)]
 pub extern "C" fn _start()->! {
     init();
     test_main();
-    loop{}
+    hlt_loop();
 }
 #[cfg(test)]
 #[panic_handler]
@@ -65,5 +64,13 @@ fn panic(info: &PanicInfo)->!{
     test_panic_handler(info)
 }
 pub fn init(){
+    gdt::init();
     interrupts::init_idt();
+    unsafe {interrupts::PICS.lock().initialize()};
+    x86_64::instructions::interrupts::enable();
+}
+pub fn hlt_loop() -> !{
+    loop {
+        x86_64::instructions::hlt();
+    }
 }
