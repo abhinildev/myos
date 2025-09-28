@@ -42,10 +42,15 @@ pub extern "C" fn _start()-> !{
 //    use core::fmt::Write;
 //    vga_buffer::WRITER.lock().write_str("Hello again").unwrap();
 //    write!(vga_buffer::WRITER.lock(),", some numbers: {} {}",42,1.337).unwrap();
+    myos::init();
+    x86_64::instructions::interrupts::int3();
+
    println!("Hello World{}","!");
    //panic!("Some panic message");
    #[cfg(test)]
    test_main();
+
+   println!("It did not crash");
    loop{}
 }
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
