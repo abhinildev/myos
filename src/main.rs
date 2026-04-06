@@ -5,11 +5,13 @@
 #![reexport_test_harness_main = "test_main"]
 
 extern crate alloc;
-
+mod file_system;
 use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 use myos::println;
 use bootloader::{BootInfo, entry_point};
 use core::panic::PanicInfo;
+
+use crate::file_system::fs::FileSystem;
 
 entry_point!(kernel_main);
 
@@ -17,7 +19,6 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use myos::allocator;
     use myos::memory::{self, BootInfoFrameAllocator};
     use x86_64::VirtAddr;
-
     println!("Hello World{}", "!");
     myos::init();
 
@@ -36,6 +37,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     for i in 0..500 {
         vec.push(i);
     }
+    
     println!("vec at {:p}", vec.as_slice());
 
     // create a reference counted vector -> will be freed when count reaches 0
@@ -50,7 +52,23 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         "reference count is {} now",
         Rc::strong_count(&cloned_reference)
     );
+    let mut fs=FileSystem::new();
+    fs.init();
+    let root = fs.read_inode(0) ;
+    println!("Root inode -> size:{} , block: {}",root.size,root.block);
+    fs.create("a.txt");
+    println!("File is created");
+    let root = fs.read_inode(0);
+    let block = root.block as usize;
 
+    let data = fs.disk.read_block(block);
+
+    let entry = unsafe {
+        *(data.as_ptr() as *const crate::file_system::dir::DirEntry)
+    };
+    
+    println!("Dir entry inode: {}", entry.inode);
+    println!("First char of name: {}", entry.name[0] as char);
     #[cfg(test)]
     test_main();
 

@@ -1,0 +1,29 @@
+// file system overview
+#[macro_export]
+struct superblock {
+    list_head: Struct,
+    s_inodes: Struct,
+    s_dirt: u64,
+    
+}
+struct inode {
+ i_mode:u16, //file type and access rights
+//  i_blocks: u32, //number of data blocs
+ i_block: u32 ,//pointer to data block
+ i_size: u32,//size of the file
+ i_type:u16, //type of the file 
+
+}
+
+struct  file_desc{
+
+}
+struct dir_entry{
+ inode: u32, //inode number
+ name_len:u8, //file name length
+ file_type: u8, //fule Tyoem
+ name: [u8;16]//file name
+}
+// create
+// write "hi"
+// read
