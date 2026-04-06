@@ -54,21 +54,9 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     );
     let mut fs=FileSystem::new();
     fs.init();
-    let root = fs.read_inode(0) ;
-    println!("Root inode -> size:{} , block: {}",root.size,root.block);
     fs.create("a.txt");
-    println!("File is created");
-    let root = fs.read_inode(0);
-    let block = root.block as usize;
-
-    let data = fs.disk.read_block(block);
-
-    let entry = unsafe {
-        *(data.as_ptr() as *const crate::file_system::dir::DirEntry)
-    };
-    
-    println!("Dir entry inode: {}", entry.inode);
-    println!("First char of name: {}", entry.name[0] as char);
+    fs.write_file("a.txt", "hi!!");
+    fs.read_file("a.txt");
     #[cfg(test)]
     test_main();
 

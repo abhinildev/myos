@@ -6,6 +6,6 @@ This is a final year project being done by Abhinil, Reetam, Bishal and Nihar. So
     3. Memory management
     4. VGA text buffer
     5. Memory Management
-    6. File System (ongoing)
+    6. File System done
     7. Shell (ongoing)
     8. Context switching along with task management (planned)
