@@ -9,3 +9,14 @@ This is a final year project being done by Abhinil, Reetam, Bishal and Nihar. So
     6. File System done
     7. Shell (ongoing)
     8. Context switching along with task management (planned)
+
+
+## Setup
+Run these commands in order
+- `cargo install bootimage` (install bootimage if not previously)
+- `cargo bootimage` (attach the bootimage)
+- `cargo build` (to check for build errors)
+- `cargo run` (to run in qemu - qemu must be installed)
+
+
+
