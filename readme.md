@@ -13,7 +13,10 @@ This is a final year project being done by Abhinil, Reetam, Bishal and Nihar. So
 
 ## Setup
 Run these commands in order
-- `cargo install bootimage`
+- `cargo install bootimage` (install bootimage if not previously)
+- `cargo bootimage` (attach the bootimage)
 - `cargo build` (to check for build errors)
 - `cargo run` (to run in qemu - qemu must be installed)
+
+
 
