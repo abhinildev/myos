@@ -61,7 +61,20 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     test_main();
 
     println!("It did not crash!");
-    myos::hlt_loop();
+
+    //multitasking
+    use myos::task::{Task, executor::Executor};
+    use myos::task::keyboard::print_keypress;
+
+    let mut executor = Executor::new();
+
+    executor.spawn(Task::new(print_keypress()));
+
+    executor.spawn(Task::new(example_task()));
+
+    executor.run()
+    
+    //myos::hlt_loop();
 }
 
 /// This function is called on panic.
@@ -70,6 +83,11 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
     myos::hlt_loop();
+}
+
+async fn example_task() {
+    println!("[task] example_task: starting");
+    println!("[task] example_task: multitasking is working");
 }
 
 #[cfg(test)]
