@@ -15,6 +15,7 @@ pub mod memory;
 pub mod shell;
 pub mod serial;
 pub mod vga_buffer;
+pub mod task;
 
 pub fn init() {
     gdt::init();

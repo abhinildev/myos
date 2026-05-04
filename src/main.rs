@@ -45,6 +45,11 @@ fn panic(info: &PanicInfo) -> ! {
     myos::hlt_loop();
 }
 
+async fn example_task() {
+    println!("[task] example_task: starting");
+    println!("[task] example_task: multitasking is working");
+}
+
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
