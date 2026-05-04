@@ -75,6 +75,25 @@ impl Writer{
             }
         }
     }
+    pub fn backspace(&mut self) {
+        if self.column_position == 0 {
+            return;
+        }
+
+        self.column_position -= 1;
+        let row = BUFFER_HEIGHT - 1;
+        let col = self.column_position;
+        self.buffer.chars[row][col].write(ScreenChar {
+            ascii_character: b' ',
+            color_code: self.color_code,
+        });
+    }
+    pub fn clear_screen(&mut self) {
+        for row in 0..BUFFER_HEIGHT {
+            self.clear_row(row);
+        }
+        self.column_position = 0;
+    }
     pub fn write_string(&mut self,s:&str){
         for byte in s.bytes(){
             match byte {
