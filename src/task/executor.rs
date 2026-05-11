@@ -1,3 +1,5 @@
+// src/task/executor.rs
+
 use super::{Task, TaskId};
 use alloc::{collections::BTreeMap, sync::Arc, task::Wake};
 use core::task::{Context, Poll, Waker};
@@ -23,7 +25,6 @@ impl Executor {
         if self.tasks.insert(task_id, task).is_some() {
             panic!("Task with same ID already in tasks");
         }
-
         self.task_queue.push(task_id).expect("task queue full");
     }
 
@@ -41,8 +42,8 @@ impl Executor {
             };
 
             let waker = waker_cache
-            .entry(task_id)
-            .or_insert_with(|| TaskWaker::new(task_id, task_queue.clone()));
+                .entry(task_id)
+                .or_insert_with(|| TaskWaker::new(task_id, task_queue.clone()));
 
             let mut context = Context::from_waker(waker);
             match task.poll(&mut context) {
@@ -57,6 +58,9 @@ impl Executor {
 
     pub fn run(&mut self) -> ! {
         loop {
+            if crate::task::scheduler::should_spawn() {
+                crate::task::scheduler::spawn_all_tasks(self);
+            }
             self.run_ready_tasks();
             self.sleep_if_idle();
         }
@@ -64,14 +68,12 @@ impl Executor {
 
     fn sleep_if_idle(&self) {
         use x86_64::instructions::interrupts;
-
         interrupts::disable();
         if self.task_queue.is_empty() {
             interrupts::enable_and_hlt();
         } else {
             interrupts::enable();
         }
-
     }
 }
 
