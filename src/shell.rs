@@ -77,6 +77,8 @@ pub enum Command<'a> {
     Help,
     Echo(&'a str),
     Clear,
+    RunTasks,
+    Tasks,
     Unknown(&'a str),
 }
 
@@ -99,9 +101,19 @@ pub fn run() -> ! {
 
 pub fn handle_key(key: DecodedKey) {
     match key {
-        DecodedKey::Unicode('\n') | DecodedKey::Unicode('\r') => submit_line(),
-        DecodedKey::Unicode('\u{8}') | DecodedKey::Unicode('\u{7f}') => erase_character(),
-        DecodedKey::Unicode(character) if character.is_ascii() && !character.is_control() => {
+        DecodedKey::Unicode('\n') | DecodedKey::Unicode('\r') => {
+            submit_line();
+            // process the line immediately after Enter
+            if let Some(line) = take_line() {
+                execute_line(line.as_str());
+                print_prompt();
+            }
+        }
+        DecodedKey::Unicode('\u{8}') | DecodedKey::Unicode('\u{7f}') => {
+            erase_character()
+        }
+        DecodedKey::Unicode(character) 
+            if character.is_ascii() && !character.is_control() => {
             append_character(character)
         }
         _ => {}
@@ -122,6 +134,8 @@ pub fn parse_command(input: &str) -> Command<'_> {
         "help" => Command::Help,
         "clear" => Command::Clear,
         "echo" => Command::Echo(arguments),
+        "run" if arguments == "tasks" => Command::RunTasks,
+        "tasks" => Command::Tasks,
         _ => Command::Unknown(trimmed),
     }
 }
@@ -134,11 +148,25 @@ pub fn execute_line(line: &str) {
             println!("  help  - show this message");
             println!("  echo  - print the rest of the line");
             println!("  clear - clear the screen");
+            println!("  tasks - show info about the task scheduler");
         }
         Command::Echo(text) => println!("{}", text),
         Command::Clear => {
             vga_buffer::WRITER.lock().clear_screen();
         }
+        Command::RunTasks => {
+            println!("Starting task scheduler...");
+
+            crate::task::scheduler::request_spawn();
+        }
+        
+        Command::Tasks => {
+            println!("Task Scheduler Info: ");
+            println!(" Type 'run tasks' to spawn 5 demo tasks.");
+            println!(" Tasks run cooperatively using async/await.");
+            println!(" Each task yields between steps (round robin).");
+        }
+        
         Command::Unknown(command) => {
             println!("Unknown command: {}", command);
             println!("Type 'help' for a list of commands.");
@@ -200,4 +228,10 @@ fn parse_echo_command() {
 #[test_case]
 fn parse_unknown_command() {
     assert!(matches!(parse_command("status"), Command::Unknown("status")));
+}
+
+#[cfg(test)]
+#[test_case]
+fn parse_run_tasks_command() {
+    assert!(matches!(parse_command("run tasks"), Command::RunTasks));
 }

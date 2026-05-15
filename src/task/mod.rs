@@ -1,3 +1,5 @@
+// src/task/mod.rs
+
 use alloc::boxed::Box;
 use core::{
     future::Future,
@@ -9,6 +11,7 @@ use core::{
 pub mod executor;
 pub mod keyboard;
 pub mod simple_executor;
+pub mod scheduler;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TaskId(u64);
@@ -33,7 +36,7 @@ impl Task {
         }
     }
 
-    fn poll(&mut self, context: &mut Context) -> Poll<()> {
+    pub fn poll(&mut self, context: &mut Context) -> Poll<()> {
         self.future.as_mut().poll(context)
     }
 }

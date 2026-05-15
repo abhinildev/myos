@@ -9,7 +9,6 @@ use myos::println;
 use bootloader::{BootInfo, entry_point};
 use core::panic::PanicInfo;
 
-use myos::shell;
 
 entry_point!(kernel_main);
 
@@ -17,6 +16,8 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use myos::allocator;
     use myos::memory::{self, BootInfoFrameAllocator};
     use x86_64::VirtAddr;
+    use myos::task::{Task, executor::Executor};
+    use myos::task::keyboard::print_keypress;
     println!("Hello World{}", "!");
     myos::init();
 
@@ -25,16 +26,52 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
     allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
+
+    myos::task::scheduler::init();
+
     println!("Shell is ready. Type 'help' for commands.");
+    println!("Try typing: run tasks");
 
     #[cfg(test)]
     {
-    test_main();
-    myos::hlt_loop();
+        test_main();
+        myos::hlt_loop();
     }
 
     #[cfg(not(test))]
-    shell::run();
+    {
+        let mut executor = Executor::new();
+
+        executor.spawn(Task::new(shell_task()));
+
+        executor.run()
+    }
+}
+
+async fn shell_task() {
+    use myos::shell;
+    use myos::task::keyboard::ScancodeStream;
+    use pc_keyboard::{layouts, HandleControl, Keyboard, ScancodeSet1, DecodedKey};
+
+    use futures_util::stream::StreamExt;
+
+    let mut scancodes = ScancodeStream::new();
+
+    let mut keyboard = Keyboard::new(
+        ScancodeSet1::new(),
+        layouts::Us104Key,
+        HandleControl::Ignore,
+    );
+
+    myos::print!("myos> ");
+
+    while let Some(scancode) = scancodes.next().await {
+        if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
+            if let Some(key) = keyboard.process_keyevent(key_event) {
+                shell::handle_key(key);
+            }
+        }
+    }
 }
 
 /// This function is called on panic.
